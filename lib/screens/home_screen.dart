@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:news_app/repository/auth_services.dart';
 import 'package:news_app/screens/aboutus.dart';
@@ -13,9 +15,35 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   var authService = AuthService();
+  String uid = '';
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   logOut(BuildContext context) {
     authService.logOut(context);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getuid();
+  }
+
+  getuid() async {
+    final FirebaseAuth auth = FirebaseAuth.instance;
+    final user = auth.currentUser;
+    setState(() {
+      uid = user!.uid;
+    });
+  }
+
+  Stream<Map<String, dynamic>> getUserDataStream(String uid) {
+    return _firestore.collection('users').doc(uid).snapshots().map((snapshot) {
+      if (snapshot.exists) {
+        return snapshot.data() as Map<String, dynamic>;
+      } else {
+        return {}; // Return an empty map if the document doesn't exist
+      }
+    });
   }
 
   @override
@@ -26,66 +54,81 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 2,
       ),
       drawer: Drawer(
-        child: ListView(
-          children: [
-            const DrawerHeader(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
+        child: StreamBuilder<Map<String, dynamic>>(
+          stream: getUserDataStream(uid),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return CircularProgressIndicator();
+            } else {
+              final userData = snapshot.data ?? {};
+              final String username = userData['username'] ?? '';
+              final String photoUrl =
+                  userData['image'] ?? 'https://i.stack.imgur.com/l60Hf.png';
+              print(photoUrl);
+              return Column(
                 children: [
-                  CircleAvatar(
-                    radius: 50,
-                    // You can replace the placeholder image with the user's profile image
-                    backgroundImage: NetworkImage(
-                      'https://i.stack.imgur.com/l60Hf.png',
+                  DrawerHeader(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundImage: NetworkImage(photoUrl),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          username,
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
                     ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    'User Name', // Replace with the actual user's name
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  ListTile(
+                    leading: Icon(Icons.book),
+                    title: Text('Favourite News'),
+                    onTap: () {
+                      // Handle onTap for favourite news
+                    },
                   ),
+                  Divider(
+                    height: 2,
+                  ),
+                  ListTile(
+                    leading: Icon(Icons.category),
+                    title: Text('Category News'),
+                    onTap: () {
+                      // Handle onTap for favourite news
+                    },
+                  ),
+                  Divider(
+                    height: 2,
+                  ),
+
+                  ListTile(
+                    leading: Icon(Icons.info_rounded),
+                    title: Text('About'),
+                    onTap: () {
+                      Navigator.push(context,
+                          MaterialPageRoute(builder: (context) => AboutUs()));
+                    },
+                  ),
+                  Divider(
+                    height: 2,
+                  ),
+
+                  ListTile(
+                    leading: Icon(Icons.logout),
+                    title: Text("Logout"),
+                    onTap: () {
+                      logOut(context);
+                    },
+                  ),
+
+                  // Add more drawer items as needed
                 ],
-              ),
-            ),
-            ListTile(
-              leading: Icon(Icons.favorite),
-              title: Text('Favorites'),
-              onTap: () {
-                // Handle the Favorites action
-              },
-            ),
-            Divider(thickness: 2,),
-            
-            ListTile(
-              leading: Icon(Icons.settings),
-              title: Text('Settings'),
-              onTap: () {
-                // Handle the Settings action
-              },
-            ),
-            Divider(thickness: 2,),
-            
-            ListTile(
-                leading: Icon(Icons.info),
-                title: Text('About'),
-                onTap: () {
-                  Navigator.push(context,
-                      MaterialPageRoute(builder: (context) => AboutUs()));
-                }),
-            Divider(thickness: 2,),
-            
-            ListTile(
-              leading: Icon(Icons.logout),
-              title: Text("Logout"),
-              onTap: () {
-                logOut(context);
-              },
-            )
-          ],
+              );
+            }
+          },
         ),
       ),
     );

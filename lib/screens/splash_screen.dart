@@ -26,6 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
+
   @override
   Widget build(BuildContext context) {
     final height = MediaQuery.of(context).size.height;
@@ -50,7 +51,25 @@ class _SplashScreenState extends State<SplashScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      Header(),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            "FLUTTER",
+                            style: TextStyle(
+                                fontSize: 30,
+                                color: Colors.black,
+                                decoration: TextDecoration.none),
+                          ),
+                          Text(
+                            "NEWS",
+                            style: TextStyle(
+                                fontSize: 30,
+                                color: kwhite,
+                                decoration: TextDecoration.none),
+                          ),
+                        ],
+                      ),
                       SpinKitFadingCube(
                         color: kdark,
                         size: 50.0,
