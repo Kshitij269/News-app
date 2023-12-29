@@ -5,9 +5,23 @@ import '../models/categories_new_model.dart';
 import '../models/news_channel_headlines_model.dart';
 
 class NewsRepository {
+  
+  Future<CategoriesNewsModel> fetchSearchData(String data) async {
+    String newsUrl =
+        'https://newsapi.org/v2/everything?q=$data&apiKey=fbdd639693e34c3898aa0ddd72dc63be&sortBy=publishedAt';
+    final response = await http.get(Uri.parse(newsUrl));
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+
+      return CategoriesNewsModel.fromJson(body);
+    } else {
+      throw Exception('Error');
+    }
+  }
+
   Future<CategoriesNewsModel> fetchNewsCategoires(String category) async {
     String newsUrl =
-        'https://newsapi.org/v2/everything?q=$category&apiKey=fbdd639693e34c3898aa0ddd72dc63be';
+        'https://newsapi.org/v2/top-headlines?country=in&category=$category&apiKey=fbdd639693e34c3898aa0ddd72dc63be';
     final response = await http.get(Uri.parse(newsUrl));
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
